@@ -1,2 +1,2 @@
-# unit-4-game
-Star wars game
+# Psychic-Game
+Guessing game for assignment
