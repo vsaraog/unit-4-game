@@ -41,7 +41,7 @@ Object.freeze(AVATAR_LIST);
 var playerList = [];
 // The character that the user has chosen
 var currentPlayer;
-var currentDefender;
+var defender;
 var defenderList = [];
 var defeatedList = [];
  
@@ -96,16 +96,16 @@ function buildPlayers(players)
 function attack()
 {
     console.assert(currentPlayer !== undefined , "Player is not selected");
-    console.assert(currentDefender !== undefined , "Defender is not selected");
-    console.assert(currentPlayer !== currentDefender , "Both player and defender are same!");
-    console.assert(currentDefender.healthPoint > 0 , "Defender health point should be greater than 0");
+    console.assert(defender !== undefined , "Defender is not selected");
+    console.assert(currentPlayer !== defender , "Both player and defender are same!");
+    console.assert(defender.healthPoint > 0 , "Defender health point should be greater than 0");
     console.assert(currentPlayer.attackPower > 0, "Player attack power should be greater than 0");
     console.assert(currentPlayer.baseAttackPower > 0, "Player base attack power should be greater than 0");
  
-    currentDefender.healthPoint -= currentPlayer.attackPower;
-    if (currentDefender.healthPoint <= 0) {
+    defender.healthPoint -= currentPlayer.attackPower;
+    if (defender.healthPoint <= 0) {
         // @todo: Put in the defeated list
-        moveToDefeated(currentDefender);
+        moveToDefeated(defender);
         }
        
     currentPlayer.attackPower += currentPlayer.baseAttackPower;
@@ -114,12 +114,12 @@ function attack()
 function counterAttack()
 {
     console.assert(currentPlayer !== undefined , "Player is not selected");
-    console.assert(currentDefender !== undefined , "Defender is not selected");
-    console.assert(currentPlayer !== currentDefender , "Both player and defender are same!");
+    console.assert(defender !== undefined , "Defender is not selected");
+    console.assert(currentPlayer !== defender , "Both player and defender are same!");
     console.assert(currentPlayer.healthPoint > 0 , "Player health point should be greater than 0");
-    console.assert(currentDefender.attackPower > 0, "Defender attack power should be greater than 0");
+    console.assert(defender.attackPower > 0, "Defender attack power should be greater than 0");
  
-    currentPlayer.healthPoint -= currentDefender.attackPower;
+    currentPlayer.healthPoint -= defender.attackPower;
     if (currentPlayer.healthPoint <= 0) {
      playerLose();  
     }
@@ -129,6 +129,7 @@ function counterAttack()
 function moveToDefeated(defender)
 {
     defeatedList.push(defender);
+    $("#defender").find(".player-node").detach();
     if (defenderList.length == 0)
         playerWin();
 }
@@ -163,7 +164,7 @@ function initGame()
         let imgFullPath = IMG_PATH + "/" + ply.avatarImg;
 
         let colNode = $("<div>");
-        $(colNode).addClass("col border");
+        $(colNode).addClass("col border player-col");
         // $(colNode).attr("id", "player"+i);
 
         let divPlayerTopNode = $("<div>").attr("id", "player" + i);
@@ -171,7 +172,7 @@ function initGame()
         divPlayerTopNode.attr("ondropover", "dragDrop.allowDrop(event)");
 
         let divPlayer = $("<div>");
-        divPlayer.attr("class", "player-node text-sm-vk");
+        divPlayer.attr("class", "text-sm-vk player-node");
         divPlayer.attr("id", ply.id);
         divPlayer.attr("draggable", "true");
         divPlayer.attr("ondragstart", "dragDrop.drag(event)");
@@ -234,17 +235,19 @@ var dragDrop = {
         }
 
         if (data !== "") {
-            ev.target.appendChild(document.getElementById(data));
             // VIK_QUESTION: How in JS object passed as param can be changed in function?
             // VIK_TODO: Allow changing the player in beginning of the game
-            if (currentPlayer === undefined) {
-             currentPlayer = getDroppedPlayer("your-character")
+            if (currentPlayer === undefined && ev.target.id === "your-character") {
+             currentPlayer = getDroppedPlayer("your-character");
+            ev.target.appendChild(document.getElementById(data));
+
             }
-            if (currentDefender === undefined) {
-                currentDefender = getDroppedPlayer("defender"); 
+            if (defender === undefined && ev.target.id === "defender") {
+                defender = getDroppedPlayer("defender"); 
+            ev.target.appendChild(document.getElementById(data));
             }
 
-            if (currentPlayer !== undefined && currentDefender !== undefined) {
+            if (currentPlayer !== undefined && defender !== undefined) {
                 // VIK_TODO: This should be done only once for each game
                 readyToPlay();
             }
@@ -255,15 +258,14 @@ var dragDrop = {
 function readyToPlay() 
 {
     console.assert(currentPlayer !== undefined, "Current player is not set");
-    console.assert(currentDefender !== undefined, "Defender is not set");
+    console.assert(defender !== undefined, "Defender is not set");
 
     // search all-characters-row to find remaining players using
     // the class "player-node" 
     // detach them and append them to "enemies-available"
-    let enemies = $("#all-characters-row").find(".player-node");
+    let enemies = $("#all-characters-row").find(".player-col");
     for (let i = 0; i < enemies.length; ++i) {
-        let enemy = enemies[i].detach();
-        $("enemies-available").append(enemy);
+        $(enemies[i]).detach().appendTo("#enemies-available");
     }
 
     $("#attack").prop("disabled", false);
@@ -284,7 +286,7 @@ $(document).on("click", "#attack", function() {
     attack();
     counterAttack();
     updateHealthPoint(currentPlayer);
-    updateHealthPoint(currentDefender);
+    updateHealthPoint(defender);
 })
 
 // $(document).on("mouseenter", "#attack", function() {
