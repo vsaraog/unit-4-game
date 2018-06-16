@@ -297,13 +297,13 @@ var dragDrop = {
             // VIK_TODO: Allow changing the player in beginning of the game
             if (currentPlayer === null && ev.target.id === "your-character") {
                 currentPlayer = getPlayer(data);
-                ev.target.appendChild(document.getElementById(data));
+                $(ev.target).append($(document).find("#"+data)).addClass("player-ui");
 
             }
             if (theDefender === null && ev.target.id === "defender") {
                 theDefender = getPlayer(data); 
-            ev.target.appendChild(document.getElementById(data));
-            }
+            $(ev.target).append($(document).find("#"+data)).addClass("defender-ui");
+        }
 
             startGame();
         } 
@@ -334,7 +334,10 @@ function startGame() {
         // detach them and append them to "enemies-available"
         let enemies = $("#all-characters-row").find(".player-col");
         for (let i = 0; i < enemies.length; ++i) {
-            $(enemies[i]).detach().appendTo("#enemies-available");
+            let enemy = $(enemies[i]).detach();
+            // If it's not an empty node
+            if (enemy.find(".player-node").length !== 0)
+                enemy.appendTo("#enemies-available");
         }
 
         disableAttackBtn(false);
@@ -354,14 +357,18 @@ $(document).on("click", ".attack-btn", function() {
     attackCounterAttack();
 })
 
-$(document).on("dblclick", ".player-node", function() {
+$(document).on("dblclick", ".player-col", function() {
+    let node = $(this).find(".player-node");
+
     if (currentPlayer === null) {
-        $(document).find("#your-character").append($(this)).addClass("player-ui");
-        currentPlayer = getPlayer($(this).attr("id"));
-    }
+        $(this).detach();
+        currentPlayer = getPlayer(node.attr("id"));
+      $(document).find("#your-character").append(node).addClass("player-ui");
+      }
     else if (theDefender === null) {
-        $(document).find("#defender").append($(this)).addClass("defender-ui");
-        theDefender = getPlayer($(this).attr("id"));
+        $(this).detach();
+        theDefender = getPlayer(node.attr("id"));
+        $(document).find("#defender").append(node).addClass("defender-ui");
 
     }
     startGame();

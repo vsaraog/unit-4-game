@@ -25,6 +25,8 @@ body  {
 
 .player-ui {
     background-color: green;
+    /* border-color: green; */
+    /* border-style: double; */
 }
 
 .defender-ui {
