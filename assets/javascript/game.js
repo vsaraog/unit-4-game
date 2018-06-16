@@ -85,7 +85,7 @@ function initGame()
         divPlayerTopNode.attr("ondropover", "dragDrop.allowDrop(event)");
 
         let divPlayer = $("<div>");
-        divPlayer.attr("class", "text-sm-vk player-node");
+        divPlayer.attr("class", "text-sm-vk text-center player-node");
         divPlayer.attr("id", ply.id);
         divPlayer.attr("draggable", "true");
         divPlayer.attr("ondragstart", "dragDrop.drag(event)");
@@ -236,7 +236,7 @@ function moveToDefeated(defender)
     defeatedList.push(defender);
     theDefender = null;
     
-    $("#defender").find(".player-node").detach();
+    $("#defender").removeClass("defender-ui").find(".player-node").detach();
     if ( hasPlayerWon() )
         playerWin();
 }
@@ -292,55 +292,53 @@ var dragDrop = {
         ev.preventDefault();
         let data = ev.dataTransfer.getData("text");
 
-        let getDroppedPlayer = function(targetId) {
-            let player;
-            if (ev.target.id === targetId) {
-                for (let i = 0; i < playerList.length; ++i) {
-                    if (playerList[i].id === data) {
-                        player = playerList[i];
-                        break;
-                    }
-                }
-            } 
-
-            return player;   
-        }
-
         if (data !== "") {
             // VIK_QUESTION: How in JS object passed as param can be changed in function?
             // VIK_TODO: Allow changing the player in beginning of the game
             if (currentPlayer === null && ev.target.id === "your-character") {
-             currentPlayer = getDroppedPlayer("your-character");
-            ev.target.appendChild(document.getElementById(data));
+                currentPlayer = getPlayer(data);
+                ev.target.appendChild(document.getElementById(data));
 
             }
             if (theDefender === null && ev.target.id === "defender") {
-                theDefender = getDroppedPlayer("defender"); 
+                theDefender = getPlayer(data); 
             ev.target.appendChild(document.getElementById(data));
             }
 
-            if (currentPlayer !== null && theDefender !== null) {
-                // VIK_TODO: This should be done only once for each game
-                readyToPlay();
-            }
+            startGame();
         } 
     }
 }
 
-function readyToPlay() 
-{
-    console.assert(currentPlayer !== null, "Current player is not set");
-    console.assert(theDefender !== null, "Defender is not set");
+// Returns the player object of the input player id
+function getPlayer(playerId) {
+        let player;
+    // if (ev.target.id === targetId) {
+        for (let i = 0; i < playerList.length; ++i) {
+            if (playerList[i].id === playerId) {
+                player = playerList[i];
+                break;
+            }
+        }
+    // } 
 
-    // search all-characters-row to find remaining players using
-    // the class "player-node" 
-    // detach them and append them to "enemies-available"
-    let enemies = $("#all-characters-row").find(".player-col");
-    for (let i = 0; i < enemies.length; ++i) {
-        $(enemies[i]).detach().appendTo("#enemies-available");
+    return player;   
+}
+
+function startGame() {
+    if (currentPlayer !== null && theDefender !== null) {
+        // VIK_TODO: This should be done only once for each game
+
+        // search all-characters-row to find remaining players using
+        // the class "player-node" 
+        // detach them and append them to "enemies-available"
+        let enemies = $("#all-characters-row").find(".player-col");
+        for (let i = 0; i < enemies.length; ++i) {
+            $(enemies[i]).detach().appendTo("#enemies-available");
+        }
+
+        disableAttackBtn(false);
     }
-
-    disableAttackBtn(false);
 }
 
 function buildHealthDivId(player)
@@ -354,6 +352,19 @@ function updateHealthPoint(player) {
 
 $(document).on("click", ".attack-btn", function() {
     attackCounterAttack();
+})
+
+$(document).on("dblclick", ".player-node", function() {
+    if (currentPlayer === null) {
+        $(document).find("#your-character").append($(this)).addClass("player-ui");
+        currentPlayer = getPlayer($(this).attr("id"));
+    }
+    else if (theDefender === null) {
+        $(document).find("#defender").append($(this)).addClass("defender-ui");
+        theDefender = getPlayer($(this).attr("id"));
+
+    }
+    startGame();
 })
 
 // drag and drop player to "your-character"

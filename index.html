@@ -21,10 +21,15 @@
 
 <body>
     <div class="container">
+        <div class="row">
+            <div class="col-10">
+                <div class="float-right">Star Wars RPG!</div>
+            </div>
+        </div>
         <div id="all-characters-row" class="row">
         </div>
         <div class="row">
-            <div class="col border">
+            <div class="col">
                 <div>Your Character</div>
                 <div id="your-character" class="empty-box" ondrop="dragDrop.drop(event)" ondragover="dragDrop.allowDrop(event)"></div>
             </div>
@@ -46,14 +51,14 @@
             </div>
         </div>
         <div class="row">
-            <div class="col border">
+            <div class="col">
                 <div>Defender</div>
                 <div id="defender" class="empty-box" ondrop="dragDrop.drop(event)" ondragover="dragDrop.allowDrop(event)"></div>
             </div>
         </div>
         <div class="row">
             <div class="col">
-                <div class="user-msg text-success"></div>
+                <div class="user-msg text-info"></div>
             </div>
         </div>
         <div class="row">
