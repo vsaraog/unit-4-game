@@ -1,16 +1,12 @@
-// Question: Is HP, AP & CAP randomized for each player?
 // 4 players
 // each player will have healthPoint, attackPower, counterAttackPower, baseAttackPower
 // player role. attacker, defender
 // attacker uses AP. Defender uses CAP
-// health point 50 - 100
-// AP & CAP 10 - min. of HP range
  
 // To make sure changing constant gives error
 "use strict";
 
 $(document).ready(function() {
-// VIK_DEBUG: Remove following call later on
     initGame();
 })
  
@@ -294,7 +290,6 @@ var dragDrop = {
 
         if (data !== "") {
             // VIK_QUESTION: How in JS object passed as param can be changed in function?
-            // VIK_TODO: Allow changing the player in beginning of the game
             if (currentPlayer === null && ev.target.id === "your-character") {
                 currentPlayer = getPlayer(data);
                 $(ev.target).append($(document).find("#"+data)).addClass("player-ui");
@@ -397,7 +392,3 @@ $(document).on("dblclick", ".player-col", function() {
 // if defender wins against the player
 // increase loss count
 // init state of the game
-
-// VIK_TODO: Allow to change player at the start
-// VIK_TODO: Initialize the state when attacker & defender are set
-// i.e. defender list, attack button etc
