@@ -8,6 +8,11 @@
  
 // To make sure changing constant gives error
 "use strict";
+
+$(document).ready(function() {
+// VIK_DEBUG: Remove following call later on
+    initGame();
+})
  
 const HEALTH_POINT = {
     min: 100,
@@ -31,8 +36,8 @@ Object.freeze(COUNTER_ATTACK_RANGE);
 const IMG_PATH = "assets/images"
 const AVATAR_LIST = [
     { name:"Obi-Wan Kenobi",         img:"obi-wan.jpeg", id: "obi-wan" },
-        { name: "Luke Skywalker",         img: "luke-skywalker.jpeg", id: "luke-sky" },
-        {name: "Darth Sidious",        img: "darth-sidious.jpeg", id: "darth-sid"},
+       { name: "Luke Skywalker",         img: "luke-skywalker.jpeg", id: "luke-sky" },
+       {name: "Darth Sidious",        img: "darth-sidious.jpeg", id: "darth-sid"},
         {name: "Darth Maul",    img:"darth-maul.jpeg", id: "darth-maul"}];
 
 Object.freeze(AVATAR_LIST);
@@ -41,124 +46,32 @@ Object.freeze(AVATAR_LIST);
 var playerList = [];
 // The character that the user has chosen
 var currentPlayer;
-var defender;
-var defenderList = [];
+// The current defender
+var theDefender;
+// list of all the defender that were defeated
 var defeatedList = [];
- 
-function randomNumGenerator(min, max, roundToNearest)
-{
-    let num = ( min + Math.round(Math.random() * (max-min) ) );
-    return ( Math.round(num/roundToNearest) * roundToNearest );
+
+function initGlobal() {
+    playerList = [];
+    defeatedList = [];
+    currentPlayer = null;
+    theDefender = null;
 }
 
-function Player(hp, ap, cap, avt) 
-{
-    this.healthPoint = hp;
-    // Make following properties non-writable, non-configurable
-    Object.defineProperty( this, 'counterAttackPower', {value: cap} );
-    Object.defineProperty( this, 'baseAttackPower', {value: ap} );
-    Object.defineProperty( this, 'avatarName', {value: avt.name} );
-    Object.defineProperty( this, 'avatarImg', {value: avt.img} );
-    Object.defineProperty( this, 'id', {value: avt.id} );
-    
-    this.attackPower = this.baseAttackPower;
-}
- 
-// Creates a player and returns it
-function createPlayer(avatar)
-{
-    // Just aliases
-    let minHP = HEALTH_POINT.min;
-    let maxHP = HEALTH_POINT.max;
-    let minAP = ATTACK_RANGE.min;
-    let maxAP = ATTACK_RANGE.max;
-    let minCAP = COUNTER_ATTACK_RANGE.min;
-    let maxCAP = COUNTER_ATTACK_RANGE.max;
-    let rand = randomNumGenerator;
- 
-    return new Player(
-        rand(minHP, maxHP, 10),     // Health Point
-        rand(minAP, maxAP, 5),      // Attack Power
-        rand(minCAP, maxCAP, 5),    // Couter Attack Power
-        avatar
-        );
-}
- 
-// Builds all the players of the game
-function buildPlayers(players)
-{
-    //let avatars = getAvatarsRandomize(AVATAR_LIST);
-    let avatars = AVATAR_LIST.slice();
-    for (let i = 0; i < avatars.length; ++i)
-        players.push( createPlayer(avatars[i]) );
-}
- 
-function attack()
-{
-    console.assert(currentPlayer !== undefined , "Player is not selected");
-    console.assert(defender !== undefined , "Defender is not selected");
-    console.assert(currentPlayer !== defender , "Both player and defender are same!");
-    console.assert(defender.healthPoint > 0 , "Defender health point should be greater than 0");
-    console.assert(currentPlayer.attackPower > 0, "Player attack power should be greater than 0");
-    console.assert(currentPlayer.baseAttackPower > 0, "Player base attack power should be greater than 0");
- 
-    defender.healthPoint -= currentPlayer.attackPower;
-    if (defender.healthPoint <= 0) {
-        // @todo: Put in the defeated list
-        moveToDefeated(defender);
-        }
-       
-    currentPlayer.attackPower += currentPlayer.baseAttackPower;
-}
- 
-function counterAttack()
-{
-    console.assert(currentPlayer !== undefined , "Player is not selected");
-    console.assert(defender !== undefined , "Defender is not selected");
-    console.assert(currentPlayer !== defender , "Both player and defender are same!");
-    console.assert(currentPlayer.healthPoint > 0 , "Player health point should be greater than 0");
-    console.assert(defender.attackPower > 0, "Defender attack power should be greater than 0");
- 
-    currentPlayer.healthPoint -= defender.attackPower;
-    if (currentPlayer.healthPoint <= 0) {
-     playerLose();  
-    }
-   
-}
- 
-function moveToDefeated(defender)
-{
-    defeatedList.push(defender);
-    $("#defender").find(".player-node").detach();
-    if (defenderList.length == 0)
-        playerWin();
-}
- 
-function playerLose()
-{
-}
- 
-function playerWin()
-{
-}
-
- 
 function initGame()
 {
-    $("#attack").prop("disabled", true);
+    initGlobal();
 
-    playerList = [];
+    disableAttackBtn(true);
+
     buildPlayers(playerList);
     console.log(playerList);
-    // let userChosenPlayer = 0; // VIK_TODO: Change to the one that user picked
-    // let userChosenDefender = 1; // VIK_TODO: Change to the one that user picked
     // console.assert(userChosenPlayer < playerList.length, "Player list is not built properly");
     // console.assert(userChosenDefender < playerList.length, "Player list is not built properly");
     // console.assert(userChosenDefender !== userChosenPlayer, "Player and defender can't be same");
     // currentPlayer = playerList[userChosenPlayer];
     // currentDefender = playerList[userChosenDefender];
 
-    defenderList = [];
     for (let i = 0; i < playerList.length; ++i) {
         let ply = playerList[i];
         let imgFullPath = IMG_PATH + "/" + ply.avatarImg;
@@ -193,20 +106,179 @@ function initGame()
 
         colNode.append(divPlayerTopNode);
         $("#all-characters-row").append(colNode);
-        
-
-        // if (i !== userChosenPlayer && i != userChosenDefender)
-        //     defenderList.push(playerList[i]);
     }
-    defeatedList = [];
 }
 
-// $(window).on("load", function() {
-$(document).ready(function() {
-// VIK_DEBUG: Remove following call later on
-initGame();
-})
+function randomNumGenerator(min, max, roundToNearest)
+{
+    let num = ( min + Math.round(Math.random() * (max-min) ) );
+    return ( Math.round(num/roundToNearest) * roundToNearest );
+}
 
+function Player(hp, ap, cap, avt) 
+{
+    this.healthPoint = hp;
+    // Make following properties non-writable, non-configurable
+    Object.defineProperty( this, 'counterAttackPower', {value: cap} );
+    Object.defineProperty( this, 'baseAttackPower', {value: ap} );
+    Object.defineProperty( this, 'avatarName', {value: avt.name} );
+    Object.defineProperty( this, 'avatarImg', {value: avt.img} );
+    Object.defineProperty( this, 'id', {value: avt.id} );
+    
+    this.attackPower = this.baseAttackPower;
+}
+
+// Creates a player and returns it
+function createPlayer(avatar)
+{
+    // Just aliases
+    let minHP = HEALTH_POINT.min;
+    let maxHP = HEALTH_POINT.max;
+    let minAP = ATTACK_RANGE.min;
+    let maxAP = ATTACK_RANGE.max;
+    let minCAP = COUNTER_ATTACK_RANGE.min;
+    let maxCAP = COUNTER_ATTACK_RANGE.max;
+    let rand = randomNumGenerator;
+ 
+    return new Player(
+        rand(minHP, maxHP, 10),     // Health Point
+        rand(minAP, maxAP, 5),      // Attack Power
+        rand(minCAP, maxCAP, 5),    // Couter Attack Power
+        avatar
+        );
+}
+ 
+// Builds all the players of the game
+function buildPlayers(players)
+{
+    let avatars = AVATAR_LIST.slice();
+    for (let i = 0; i < avatars.length; ++i)
+        players.push( createPlayer(avatars[i]) );
+}
+ 
+function attackCounterAttack() {
+    console.assert(currentPlayer !== null, "Player is not valid");
+    console.assert(theDefender !== null, "defender is not valid");
+
+    let playerPower = currentPlayer.attackPower;
+    let defenderPower = theDefender.attackPower;
+    let defenderName = theDefender.avatarName;
+
+    attack(); 
+    if (theDefender !== null) {
+        counterAttack();
+        updateHealthPoint(theDefender);
+    }
+    updateHealthPoint(currentPlayer);
+
+    displayMsgToUser(playerPower, defenderPower, defenderName);
+    
+}
+
+function displayMsgToUser(playerPower, defenderPower, defenderName) {
+    let msg;
+    if ( hasPlayerWon() ) {
+        msg = "You Win!!!";
+    }
+    else if (currentPlayer.healthPoint <= 0) {
+        msg = "Sorry, you lost.";
+    }
+    else if (theDefender === null) {
+        msg = defenderName + " was defeated. Pick the next one";
+    }
+    else {
+        msg = "You attacked with " + playerPower + " power. ";
+        msg += defenderName + " counter-attacked you with " + defenderPower + " power.";
+    }
+
+    msgToUser(msg);
+}
+
+function msgToUser(msg)
+{
+    $(document).find(".user-msg").text(msg);
+}
+
+function attack()
+{
+    console.assert(currentPlayer !== null , "Player is not selected");
+    console.assert(theDefender !== null , "Defender is not selected");
+    console.assert(currentPlayer !== theDefender , "Both player and defender are same!");
+    console.assert(theDefender.healthPoint > 0 , "Defender health point should be greater than 0");
+    console.assert(currentPlayer.attackPower > 0, "Player attack power should be greater than 0");
+    console.assert(currentPlayer.baseAttackPower > 0, "Player base attack power should be greater than 0");
+ 
+    theDefender.healthPoint -= currentPlayer.attackPower;
+    if (theDefender.healthPoint <= 0) {
+        moveToDefeated(theDefender);
+    }
+    
+    currentPlayer.attackPower += currentPlayer.baseAttackPower;
+}
+ 
+function counterAttack()
+{
+    console.assert(currentPlayer !== null , "Player is not selected");
+    console.assert(theDefender !== null , "Defender is not selected");
+    console.assert(currentPlayer !== theDefender , "Both player and defender are same!");
+    console.assert(currentPlayer.healthPoint > 0 , "Player health point should be greater than 0");
+    console.assert(theDefender.attackPower > 0, "Defender attack power should be greater than 0");
+ 
+    currentPlayer.healthPoint -= theDefender.attackPower;
+    if (currentPlayer.healthPoint <= 0) {
+     playerLose();  
+    }
+   
+}
+ 
+function moveToDefeated(defender)
+{
+    defeatedList.push(defender);
+    theDefender = null;
+    
+    $("#defender").find(".player-node").detach();
+    if ( hasPlayerWon() )
+        playerWin();
+}
+
+function hasPlayerWon() {
+    // In player list all except one are the defenders
+    return ( defeatedList.length == playerList.length - 1 );
+}
+ 
+function playerLose()
+{
+    disableAttackBtn(true);
+    displayRestart();
+}
+ 
+function playerWin()
+{
+    disableAttackBtn(true);
+    displayRestart();
+}
+
+function displayRestart()
+{
+    var btn = $("<button>").attr("class", "restart-btn btn btn-secondary btn-sm");
+    btn.attr("type", "button");
+    btn.text("Restart");
+    btn.on("click", function() {
+        // VIK_TODO: Don't use reload. Instead clean up DOM
+        // $(this).remove();
+        // initGame();
+
+        location.reload();
+    });
+
+    $(document).find(".restart").append(btn);
+}
+
+function disableAttackBtn(shouldDisable)
+{
+    $(".attack-btn").prop("disabled", shouldDisable);
+}
+ 
 var dragDrop = {
     allowDrop: function(ev) {
         ev.preventDefault();
@@ -237,17 +309,17 @@ var dragDrop = {
         if (data !== "") {
             // VIK_QUESTION: How in JS object passed as param can be changed in function?
             // VIK_TODO: Allow changing the player in beginning of the game
-            if (currentPlayer === undefined && ev.target.id === "your-character") {
+            if (currentPlayer === null && ev.target.id === "your-character") {
              currentPlayer = getDroppedPlayer("your-character");
             ev.target.appendChild(document.getElementById(data));
 
             }
-            if (defender === undefined && ev.target.id === "defender") {
-                defender = getDroppedPlayer("defender"); 
+            if (theDefender === null && ev.target.id === "defender") {
+                theDefender = getDroppedPlayer("defender"); 
             ev.target.appendChild(document.getElementById(data));
             }
 
-            if (currentPlayer !== undefined && defender !== undefined) {
+            if (currentPlayer !== null && theDefender !== null) {
                 // VIK_TODO: This should be done only once for each game
                 readyToPlay();
             }
@@ -257,8 +329,8 @@ var dragDrop = {
 
 function readyToPlay() 
 {
-    console.assert(currentPlayer !== undefined, "Current player is not set");
-    console.assert(defender !== undefined, "Defender is not set");
+    console.assert(currentPlayer !== null, "Current player is not set");
+    console.assert(theDefender !== null, "Defender is not set");
 
     // search all-characters-row to find remaining players using
     // the class "player-node" 
@@ -268,7 +340,7 @@ function readyToPlay()
         $(enemies[i]).detach().appendTo("#enemies-available");
     }
 
-    $("#attack").prop("disabled", false);
+    disableAttackBtn(false);
 }
 
 function buildHealthDivId(player)
@@ -280,22 +352,9 @@ function updateHealthPoint(player) {
     $("#"+buildHealthDivId(player)).text(player.healthPoint);
 }
 
-// VIK_QUESTION: Why $("#attack").on("click", ...) is not working
-$(document).on("click", "#attack", function() {
-    console.log("In attack");
-    attack();
-    counterAttack();
-    updateHealthPoint(currentPlayer);
-    updateHealthPoint(defender);
+$(document).on("click", ".attack-btn", function() {
+    attackCounterAttack();
 })
-
-// $(document).on("mouseenter", "#attack", function() {
-//     let disable = (currentPlayer === undefined || currentDefender === undefined);
-//     $(this).prop("disabled", disable);
-// })
-// $(document).on("click", "#attack", function() {
-//     console.log("clicked button");
-// })
 
 // drag and drop player to "your-character"
 // drag and drop a player to defenders location
